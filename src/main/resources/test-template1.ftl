@@ -1,16 +1,15 @@
+<#if package != "">
 package ${package};
 
+</#if>
 <#if imports != "">
-    ${imports}
-
+${imports}
 </#if>
 import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class ${class_name} {
-
-${other_code}
-
+${rest_of_code}
 <#list tests as test>
     @Test
     public void ${test[0]}() {

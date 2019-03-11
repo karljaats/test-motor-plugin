@@ -19,9 +19,9 @@
     </extensions>
 
     <actions>
-        <group id="MyPlugin.SampleMenu" text="Greeting" description="Greeting menu">
+        <group id="TestMotor.EditorPopupMenu" text="Generate Test" description="Test menu">
             <add-to-group group-id="EditorPopupMenu" anchor="last"/>
-            <action id="Myplugin.Textboxes" class="HelloAction" text="Hello" description="Says hello"/>
+            <action id="TestMotor.TestGeneration" class="GenerateTestsAction" text="Generate Tests" description="Generate Tests"/>
         </group>
     </actions>
 </idea-plugin>
