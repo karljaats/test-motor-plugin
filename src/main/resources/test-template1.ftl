@@ -17,5 +17,6 @@ ${rest_of_code}
         assertEquals(${data.expected}, f(${data.input}));
     </#list>
     }
+
 </#list>
 }

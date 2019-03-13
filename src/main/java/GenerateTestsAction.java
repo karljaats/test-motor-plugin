@@ -25,7 +25,6 @@ public class GenerateTestsAction extends AnAction {
 
     @Override
     public void actionPerformed(AnActionEvent event) {
-        Project project = event.getProject();
 
         String text;
         String projectPath;
@@ -55,27 +54,6 @@ public class GenerateTestsAction extends AnAction {
             e.printStackTrace();
         }
 
-//        // input mockup
-//        List<Object> tests = new ArrayList<>();
-//        List<Object> test1 = new ArrayList<>();
-//        test1.add("test01");
-//        Map<String, String> assert1 = new HashMap<>();
-//        assert1.put("expected", "11");
-//        assert1.put("input", "10");
-//        test1.add(assert1);
-//        tests.add(test1);
-//
-//        String other_code = "" +
-//                "    private int f(int input) {\n" +
-//                "        Basic basic = new Basic();\n" +
-//                "        return basic.inc(input);\n" +
-//                "    }\n" +
-//                "\n" +
-//                "    private static int x = 10;\n" +
-//                "    private static int computeValue() {\n" +
-//                "        return 100;\n" +
-//                "    }";
-
         String packageName = extractPackageName(text);
         String className = extractClassName(text) + "Test";
 
@@ -87,7 +65,7 @@ public class GenerateTestsAction extends AnAction {
 
         Writer file=null;
         try {
-            //TODO get the project folder structure from somewhere and don't assume it?
+            //TODO get the project internal folder structure from somewhere and don't assume it?
             //TODO test if this works if some folders are missing
             file = new FileWriter(new File(projectPath + "/src/test/java/" + packageName +
                     "/" + className + ".java"));
@@ -124,7 +102,7 @@ public class GenerateTestsAction extends AnAction {
     }
 
     private static String extractImports(String text){
-        //TODO might end prematurely if "class" is in a comment
+        //TODO doesn't consider comments
         Pattern p = Pattern.compile("" +
                         "(?<imports>import .*)\n.*? class"
                 , Pattern.DOTALL | Pattern.MULTILINE);
@@ -138,7 +116,7 @@ public class GenerateTestsAction extends AnAction {
     }
 
     private static String extractClassName(String text){
-        //TODO It could get snagged on a comment
+        //TODO doesn't consider comments
         Pattern p = Pattern.compile("" +
                         "class (?<className>.*?) \\{"
                 , Pattern.MULTILINE);
@@ -153,7 +131,7 @@ public class GenerateTestsAction extends AnAction {
 
     private static String extractRestOfCode(String text){
         //TODO currently all the rest of the code needs to be before data
-        //TODO Comments could be a problem
+        //TODO doesn't consider comments
         Pattern p = Pattern.compile("" +
                         "class .*? \\{(?<restOfCode>.*?)^[^\n]*? data[A-Za-z0-9$]*\\s*\\[]"
                 , Pattern.DOTALL | Pattern.MULTILINE);
@@ -167,6 +145,7 @@ public class GenerateTestsAction extends AnAction {
     }
 
     private static List extractTests(String text){
+        //TODO doesn't consider comments
         Pattern p = Pattern.compile("" +
                         "^[^\n]*? data(?<dataName>[A-Za-z0-9$]*)\\s*\\[]\\s*=\\s*\\{(?<data>.*?)}"
                 , Pattern.DOTALL | Pattern.MULTILINE);
