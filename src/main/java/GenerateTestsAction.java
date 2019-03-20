@@ -2,11 +2,17 @@ import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.LangDataKeys;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.project.Project;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.net.URI;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,7 +22,6 @@ import java.util.regex.Pattern;
 
 import freemarker.template.Configuration;
 import freemarker.template.Template;
-import freemarker.template.TemplateException;
 import freemarker.template.Version;
 
 
@@ -55,20 +60,21 @@ public class GenerateTestsAction extends AnAction {
         }
 
         String packageName = extractPackageName(text);
-        String className = extractClassName(text) + "Test";
+        String oldclassName = extractClassName(text);
+        String newclassName = oldclassName + "Test";
 
         dataMap.put("package", packageName);
         dataMap.put("imports", extractImports(text));
-        dataMap.put("class_name", className);
+        dataMap.put("class_name", newclassName);
         dataMap.put("rest_of_code", extractRestOfCode(text));
-        dataMap.put("tests", extractTests(text));
+        dataMap.put("tests", extractTests(text, packageName + "." + oldclassName, projectPath));
 
         Writer file=null;
         try {
             //TODO get the project internal folder structure from somewhere and don't assume it?
             //TODO test if this works if some folders are missing
             file = new FileWriter(new File(projectPath + "/src/test/java/" + packageName +
-                    "/" + className + ".java"));
+                    "/" + newclassName + ".java"));
             template.process(dataMap, file);
             file.flush();
             System.out.println("Success");
@@ -144,7 +150,7 @@ public class GenerateTestsAction extends AnAction {
         }
     }
 
-    private static List extractTests(String text){
+    private static List extractTests(String text, String classname, String projectpath){
         //TODO doesn't consider comments
         Pattern p = Pattern.compile("" +
                         "^[^\n]*? data(?<dataName>[A-Za-z0-9$]*)\\s*\\[]\\s*=\\s*\\{(?<data>.*?)}"
@@ -163,7 +169,12 @@ public class GenerateTestsAction extends AnAction {
             for (String input : dataList) {
                 Map<String, String> assert1 = new HashMap<>();
                 assert1.put("input", input);
-                assert1.put("expected", input);
+                try {
+                    assert1.put("expected", runMethod(projectpath, classname, "f", input).toString());
+                } catch (Exception e){
+                    System.out.println(e);
+                    assert1.put("expected", "?");
+                }
                 test.add(assert1);
             }
 
@@ -171,5 +182,46 @@ public class GenerateTestsAction extends AnAction {
         }
 
         return tests;
+    }
+
+    private static Object runMethod(String projectpath, String className, String methodName, String arg)
+            throws IOException, ClassNotFoundException, IllegalAccessException, InvocationTargetException {
+        //TODO maybe add some try catch blocks here instead and write some debug logs for them
+
+        //TODO get the path for this from somewhere
+        //TODO and/or check that the class actually exists there
+
+        //Path p = Paths.get(projectpath, "out", "test", "classes");
+        //Path p2 = Paths.get(projectpath, "out", "production", "classes");
+        Path p = Paths.get(projectpath, "build", "classes", "java", "test");
+        Path p2 = Paths.get(projectpath, "build", "classes", "java", "main");
+
+        URL[] urls = {p.toUri().toURL(), p2.toUri().toURL()};
+
+        try (URLClassLoader classLoader = new URLClassLoader(urls)) {
+            Class<?> clazz = classLoader.loadClass(className);
+
+            Method method = null;
+            for (Method m : clazz.getDeclaredMethods()) {
+                if (m.getName().equals(methodName)) method = m;
+            }
+
+            //clazz.getField("kala").ge
+
+            try {
+                // Can access even if private
+                method.setAccessible(true);
+                //TODO Parameter type can be something other than int.
+                return method.invoke(null, Integer.parseInt(arg));
+            } catch (NumberFormatException e){
+                return arg;
+            } catch (NullPointerException e){
+                System.out.println("Method f was not found!");
+                return arg;
+            } catch (InvocationTargetException e){
+                System.out.println(e.getTargetException());
+                return arg;
+            }
+        }
     }
 }
