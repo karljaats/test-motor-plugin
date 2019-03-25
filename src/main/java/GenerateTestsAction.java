@@ -181,11 +181,18 @@ public class GenerateTestsAction extends AnAction {
 
             for (int i=0; i < dataList.length; i++) {
                 String input = dataList[i];
-                Map<String, String> assert1 = new HashMap<>();
+                Map<String, Object> assert1 = new HashMap<>();
                 assert1.put("input", input);
                 try {
-                    //TODO .toString ei pruugi töötada kui object on imelik?
-                    assert1.put("expected", expectedResults.get(i).toString());
+                    Object expected = expectedResults.get(i);
+                    if(expected == null){
+                        assert1.put("expected", "null");
+                    }
+                    else if(expected instanceof String){
+                        assert1.put("expected", "\"" + expected + "\"");
+                    } else {
+                        assert1.put("expected", expected.toString());
+                    }
                 } catch (Exception e){
                     e.printStackTrace();
                     assert1.put("expected", "?");
