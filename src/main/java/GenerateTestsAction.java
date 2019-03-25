@@ -6,6 +6,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.lang.reflect.Array;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
@@ -77,7 +79,7 @@ public class GenerateTestsAction extends AnAction {
                     "/" + newclassName + ".java"));
             template.process(dataMap, file);
             file.flush();
-            System.out.println("Success");
+            System.out.println("File created");
         }catch (Exception e) {
             e.printStackTrace();
         }
@@ -163,16 +165,29 @@ public class GenerateTestsAction extends AnAction {
             String data = m.group("data");
             data = data.replaceAll("\\s+", "");
             String[] dataList = data.split(",");
+            String dataFieldName = "data" + m.group("dataName");
+
+            List<Object> expectedResults;
+            try {
+                expectedResults = getExpectedResults(projectpath, classname, dataFieldName);
+            } catch (Exception e){
+                System.out.println("Couldn't generate expected results for " + dataFieldName);
+                e.printStackTrace();
+                continue;
+            }
 
             List<Object> test = new ArrayList<>();
             test.add("test" + m.group("dataName"));
-            for (String input : dataList) {
+
+            for (int i=0; i < dataList.length; i++) {
+                String input = dataList[i];
                 Map<String, String> assert1 = new HashMap<>();
                 assert1.put("input", input);
                 try {
-                    assert1.put("expected", runMethod(projectpath, classname, "f", input).toString());
+                    //TODO .toString ei pruugi töötada kui object on imelik?
+                    assert1.put("expected", expectedResults.get(i).toString());
                 } catch (Exception e){
-                    System.out.println(e);
+                    e.printStackTrace();
                     assert1.put("expected", "?");
                 }
                 test.add(assert1);
@@ -184,8 +199,8 @@ public class GenerateTestsAction extends AnAction {
         return tests;
     }
 
-    private static Object runMethod(String projectpath, String className, String methodName, String arg)
-            throws IOException, ClassNotFoundException, IllegalAccessException, InvocationTargetException {
+    private static List<Object> getExpectedResults(String projectpath, String className, String dataFieldName)
+            throws IOException, ClassNotFoundException, IllegalAccessException, InvocationTargetException{
         //TODO maybe add some try catch blocks here instead and write some debug logs for them
 
         //TODO get the path for this from somewhere
@@ -203,25 +218,34 @@ public class GenerateTestsAction extends AnAction {
 
             Method method = null;
             for (Method m : clazz.getDeclaredMethods()) {
-                if (m.getName().equals(methodName)) method = m;
+                if (m.getName().equals("f")) method = m;
             }
 
-            //clazz.getField("kala").ge
+            Object[] dataArray = null;
+            for(Field field: clazz.getDeclaredFields()){
+                if(field.getName().equals(dataFieldName)){
+                    field.setAccessible(true);
+                    Object array = field.get(null);
 
-            try {
-                // Can access even if private
-                method.setAccessible(true);
-                //TODO Parameter type can be something other than int.
-                return method.invoke(null, Integer.parseInt(arg));
-            } catch (NumberFormatException e){
-                return arg;
-            } catch (NullPointerException e){
-                System.out.println("Method f was not found!");
-                return arg;
-            } catch (InvocationTargetException e){
-                System.out.println(e.getTargetException());
-                return arg;
+                    dataArray = new Object[Array.getLength(array)];
+                    for(int i = 0; i < Array.getLength(array); i++){
+                        dataArray[i] = Array.get(array, i);
+                    }
+
+                    break;
+                }
             }
+
+            List<Object> expectedResults = new ArrayList<>();
+
+            // Can access even if private
+            method.setAccessible(true);
+
+            for(Object input: dataArray){
+                expectedResults.add(method.invoke(null, input));
+            }
+
+            return expectedResults;
         }
     }
 }
