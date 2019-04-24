@@ -1,11 +1,12 @@
 plugins {
     id 'java'
-    id 'org.jetbrains.intellij' version '0.4.4'
+    id 'org.jetbrains.intellij' version '0.4.8'
 }
 
 version '1.0-SNAPSHOT'
 
-sourceCompatibility = 1.8
+sourceCompatibility = 11
+targetCompatibility = 11
 
 repositories {
     mavenCentral()
@@ -17,9 +18,14 @@ dependencies {
 }
 
 intellij {
-    version '2018.2.7'
+    version '2019.1.1'
     sandboxDirectory = "$project.buildDir/sandbox"
 }
+
+runIde {
+    jbrVersion '11_0_2b159'
+}
+
 patchPluginXml {
     changeNotes """
       Add change notes here.<br>
