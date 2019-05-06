@@ -1,11 +1,12 @@
 <idea-plugin>
     <id>test-motor</id>
-    <name>Plugin display name here</name>
-    <vendor email="support@yourcompany.com" url="http://www.yourcompany.com">YourCompany</vendor>
+    <name>Testmotor Plugin</name>
+    <!--
+    <vendor>YourCompany</vendor>
+    -->
 
     <description><![CDATA[
-    Enter short description for your plugin here.<br>
-    <em>most HTML tags may be used</em>
+    Plugin for running the test generation tool Testmotor and generating JUnit tests from its output.
     ]]></description>
 
     <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
