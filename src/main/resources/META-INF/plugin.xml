@@ -22,6 +22,7 @@
     <actions>
         <group id="TestMotor.EditorPopupMenu" text="Generate Test" description="Test menu">
             <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <action id="TestMotor.Run" class="RunTestmotorAction" text="Run Testmotor" description="Run Testmotor"/>
             <action id="TestMotor.TestGeneration" class="GenerateTestsAction" text="Generate Tests" description="Generate Tests"/>
         </group>
     </actions>

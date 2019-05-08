@@ -71,7 +71,7 @@ public class TestGenerator {
     }
 
 
-    private static String extractPackageName(String text){
+    public static String extractPackageName(String text){
         Pattern p = Pattern.compile("" +
                         "^package (?<packageName>.*);"
                 , Pattern.MULTILINE);
@@ -84,7 +84,7 @@ public class TestGenerator {
         }
     }
 
-    private static String extractImports(String text){
+    public static String extractImports(String text){
         //TODO doesn't consider comments
         Pattern p = Pattern.compile("" +
                         "(?<imports>import .*)\n.*? class"
@@ -98,7 +98,7 @@ public class TestGenerator {
         }
     }
 
-    private static String extractClassName(String text){
+    public static String extractClassName(String text){
         //TODO doesn't consider comments
         Pattern p = Pattern.compile("" +
                         "class (?<className>.*?) \\{"
@@ -112,7 +112,7 @@ public class TestGenerator {
         }
     }
 
-    private static String extractRestOfCode(String text){
+    public static String extractRestOfCode(String text){
         //TODO currently all the rest of the code needs to be before data
         //TODO doesn't consider comments
         Pattern p = Pattern.compile("" +
@@ -127,7 +127,7 @@ public class TestGenerator {
         }
     }
 
-    private static List extractTests(String text, String classname, String projectpath){
+    public static List extractTests(String text, String classname, String projectpath){
         //TODO doesn't consider comments
         Pattern p = Pattern.compile("" +
                         "^[^\n]*? data(?<dataName>[A-Za-z0-9$]*)\\s*\\[]\\s*=\\s*\\{(?<data>.*?)}"
